@@ -8,7 +8,7 @@ import { generateTransitionData, scenarios } from './data';
 import { TaxScenario } from './types';
 
 const App: React.FC = () => {
-  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedScenario, setSelectedScenario] = useState<TaxScenario>(scenarios[0]);
 
   // Regenerate data whenever the scenario changes
@@ -42,6 +42,7 @@ const App: React.FC = () => {
             selectedData={currentData} 
             fullSeries={fullDataSeries}
             scenario={selectedScenario}
+            onYearChange={setSelectedYear}
         />
       </main>
 

@@ -8,29 +8,33 @@ interface Props {
   selectedData: TaxData;
   fullSeries: TaxData[];
   scenario: TaxScenario;
+  onYearChange: (year: number) => void;
 }
 
 type TabType = 'evolution' | 'comparison' | 'technical';
 
-const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
+const Dashboard: React.FC<Props> = ({ selectedData, fullSeries, onYearChange }) => {
   const [activeTab, setActiveTab] = useState<TabType>('evolution');
   const [showFullTable, setShowFullTable] = useState(false);
 
   const [selectedTaxes, setSelectedTaxes] = useState({
     pisCofins: true,
-    icmsIss: true,
     cbs: true,
     ibs: true
   });
 
   const calculatedTotal = 
     (selectedTaxes.pisCofins ? selectedData.pisCofinsRate : 0) +
-    (selectedTaxes.icmsIss ? selectedData.icmsIssRate : 0) +
     (selectedTaxes.cbs ? selectedData.cbsRate : 0) +
     (selectedTaxes.ibs ? selectedData.ibsRate : 0);
 
   const toggleTax = (key: keyof typeof selectedTaxes) => {
     setSelectedTaxes(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const getRiskPrincipal = () => {
+    if (selectedData.year >= 2029) return "Não-cumulatividade e impacto no fluxo de caixa.";
+    return "Adequação sistêmica (ERP) e parametrização.";
   };
 
   return (
@@ -47,13 +51,12 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                 <div className="flex items-center gap-2 mt-1.5">
                     <span className={`h-2 w-2 rounded-full ${selectedData.year >= 2033 ? 'bg-[#E5A100]' : 'bg-[#F6B221]'}`}></span>
                     <p className="text-xs text-[#4B5563] uppercase tracking-wide font-bold">
-                        {selectedData.year >= 2033 ? 'Novo Modelo Consolidado' : 'Fase de Transição'}
+                        {selectedData.year >= 2033 ? 'Modelo Consolidado' : 'Fase de Transição'}
                     </p>
                 </div>
             </div>
         </div>
         
-        {/* Impacto Estratégico - Linha Lateral Amarelo Mostarda */}
         <div className="lg:col-span-8 bg-white border-l-4 border-[#F6B221] px-5 py-4 rounded-r-lg flex flex-col justify-center">
              <h3 className="text-xs font-bold text-[#1E1423] uppercase tracking-wide mb-1">Impacto Estratégico</h3>
              <p className="text-[#374151] text-sm leading-relaxed font-medium">
@@ -68,19 +71,17 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
         {/* COLUNA ESQUERDA */}
         <div className="lg:col-span-5 flex flex-col gap-6">
             
-            {/* Card de Composição */}
             <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] overflow-hidden flex-none">
                 <div className="bg-[#F8F9FB] px-5 py-3 border-b border-[#E5E7EB] flex justify-between items-center">
                     <h3 className="font-bold text-[#1E1423] text-sm uppercase tracking-wide flex items-center gap-2">
-                        <FileText size={16} className="text-[#F6B221]" /> Composição da Alíquota
+                        <FileText size={16} className="text-[#F6B221]" /> Composição da Tributação
                     </h3>
                     <HelpCircle size={16} className="text-[#9CA3AF]" />
                 </div>
                 
                 <div className="divide-y divide-[#F8F9FB]">
-                    {/* Sistema Antigo */}
+                    {/* Sistema Antigo (PIS/COFINS) */}
                     <div className="bg-[#F8F9FB]">
-                        {/* PIS / COFINS */}
                         <div className={`px-5 py-3 flex justify-between items-center transition-opacity ${selectedData.pisCofinsStatus === 'extinct' ? 'opacity-40 grayscale' : ''}`}>
                             <div className="flex items-center gap-3">
                                 <input 
@@ -104,37 +105,6 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                             </div>
                             <p className="font-mono font-bold text-base text-[#6B7280]">
                                 {selectedData.pisCofinsRate.toFixed(2)}%
-                            </p>
-                        </div>
-
-                        {/* ICMS / ISS */}
-                        <div className={`px-5 py-3 flex justify-between items-center transition-opacity ${selectedData.icmsIssTransitionFactor === 0 ? 'opacity-40 grayscale' : ''}`}>
-                            <div className="flex items-center gap-3">
-                                <input 
-                                    type="checkbox" 
-                                    checked={selectedTaxes.icmsIss} 
-                                    onChange={() => toggleTax('icmsIss')}
-                                    disabled={selectedData.icmsIssTransitionFactor === 0}
-                                    className="w-4 h-4 rounded text-[#F6B221] focus:ring-[#F6B221] border-gray-300 cursor-pointer"
-                                />
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <p className="text-sm font-bold text-[#9CA3AF]">ICMS / ISS</p>
-                                        {selectedData.year >= 2033 ? (
-                                            <span className="text-[9px] bg-[#EEF0F3] text-[#6B7280] border border-[#E5E7EB] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                                Extinto
-                                            </span>
-                                        ) : selectedData.icmsIssTransitionFactor < 100 && (
-                                            <span className="text-[9px] bg-white text-[#6B7280] border border-[#E5E7EB] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                                                {selectedData.icmsIssTransitionFactor}% Rem.
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-[10px] text-[#9CA3AF]">Est/Mun – Antigo</p>
-                                </div>
-                            </div>
-                            <p className="font-mono font-bold text-base text-[#6B7280]">
-                                {selectedData.icmsIssRate.toFixed(2)}%
                             </p>
                         </div>
                     </div>
@@ -178,10 +148,9 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                         </div>
                     </div>
 
-                    {/* Carga Total - Fundo Roxo VLMA */}
                     <div className="px-5 py-5 bg-[#1E1423] text-white">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Carga Selecionada</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Alíquota Total</p>
                             <p className="font-mono font-bold text-4xl tracking-tight text-white">
                                 {calculatedTotal.toFixed(2)}%
                             </p>
@@ -189,16 +158,15 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                         <div className="flex gap-2 items-start mt-2 pt-2 border-t border-[#2A1F30]">
                             <AlertTriangle size={12} className="text-[#F6B221] mt-0.5 shrink-0" />
                             <p className="text-[10px] text-[#9CA3AF] leading-tight">
-                                Considera apenas os tributos marcados e suas reduções no ano {selectedData.year}.
+                                Tributação vigente para o ano {selectedData.year}.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Cards de Foco e Risco */}
+            {/* Blocos de Impacto Estratégico */}
             <div className="flex flex-col gap-4 flex-grow">
-                 {/* Foco Operacional */}
                  <div className="bg-white p-4 rounded-xl border border-[#E5E7EB] flex-1">
                     <div className="flex items-center gap-2 mb-2">
                         <Target size={16} className="text-[#F6B221]" />
@@ -206,34 +174,28 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                     </div>
                     <p className="text-sm text-[#374151] font-medium leading-snug">
                         {selectedData.year < 2027 ? "Saneamento de cadastro (NCM) e Compliance." : 
-                         selectedData.year < 2033 ? "Gestão de dupla conformidade (Antigo + Novo)." : 
-                         "Otimização de créditos do IVA e precificação."}
+                         "Gestão de créditos do IVA e precificação estratégica."}
                     </p>
                  </div>
                  
-                 {/* Risco Principal - Vermelho */}
                  <div className="bg-[#FDECEC] p-4 rounded-xl border border-[#D92D20] shadow-sm flex-1">
                     <div className="flex items-center gap-2 mb-2">
                         <ShieldAlert size={16} className="text-[#D92D20]" />
                         <h4 className="text-xs font-bold text-[#D92D20] uppercase tracking-wider">Risco Principal</h4>
                     </div>
                     <p className="text-sm text-[#4B5563] font-medium leading-snug">
-                        {selectedData.year < 2029 ? "Adequação sistêmica (ERP) e parametrização." : "Acúmulo de créditos e impacto no fluxo de caixa."}
+                        {getRiskPrincipal()}
                     </p>
                  </div>
             </div>
-
         </div>
 
-        {/* COLUNA DIREITA */}
         <div className="lg:col-span-7 flex flex-col h-full">
-            
-            {/* Navegação por Abas - Azul para ativo */}
             <div className="flex bg-[#F8F9FB] p-1 rounded-lg mb-4 shrink-0">
                 <button
                     onClick={() => setActiveTab('evolution')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wide rounded-md transition-all ${
-                        activeTab === 'evolution' ? 'bg-white text-[#1E1423] shadow-sm border-b-2 border-[#F6B221]' : 'text-[#6B7280] hover:text-[#4B5563]'
+                        activeTab === 'evolution' ? 'bg-white text-[#1E1423] shadow-sm border-b-2 border-[#F6B221]' : 'text-[#6B7280]'
                     }`}
                 >
                     <TrendingUp size={14} className={activeTab === 'evolution' ? 'text-[#F6B221]' : 'text-[#9CA3AF]'} /> Evolução
@@ -241,7 +203,7 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                 <button
                     onClick={() => setActiveTab('comparison')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wide rounded-md transition-all ${
-                        activeTab === 'comparison' ? 'bg-white text-[#1E1423] shadow-sm border-b-2 border-[#F6B221]' : 'text-[#6B7280] hover:text-[#4B5563]'
+                        activeTab === 'comparison' ? 'bg-white text-[#1E1423] shadow-sm border-b-2 border-[#F6B221]' : 'text-[#6B7280]'
                     }`}
                 >
                     <BarChart3 size={14} className={activeTab === 'comparison' ? 'text-[#F6B221]' : 'text-[#9CA3AF]'} /> Comparativo
@@ -249,26 +211,35 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                  <button
                     onClick={() => setActiveTab('technical')}
                     className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold uppercase tracking-wide rounded-md transition-all ${
-                        activeTab === 'technical' ? 'bg-white text-[#1E1423] shadow-sm border-b-2 border-[#F6B221]' : 'text-[#6B7280] hover:text-[#4B5563]'
+                        activeTab === 'technical' ? 'bg-white text-[#1E1423] shadow-sm border-b-2 border-[#F6B221]' : 'text-[#6B7280]'
                     }`}
                 >
                     <Table2 size={14} className={activeTab === 'technical' ? 'text-[#F6B221]' : 'text-[#9CA3AF]'} /> Detalhe
                 </button>
             </div>
 
-            {/* Conteúdo das Visualizações */}
             <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 shadow-sm flex-grow min-h-[500px] flex flex-col">
                 
                 {activeTab === 'evolution' && (
                     <div className="animate-fade-in h-full flex flex-col">
-                        <div className="mb-4">
-                            <h3 className="text-sm font-bold text-[#1E1423] uppercase">Evolução Temporal</h3>
-                            <p className="text-xs text-[#9CA3AF] mt-1">
-                                Substituição gradativa da carga cumulativa pelo IVA.
-                            </p>
+                        <div className="mb-1">
+                            <h3 className="text-[16px] font-extrabold text-[#1E1423] uppercase">EVOLUÇÃO DA TRIBUTAÇÃO TOTAL</h3>
+                            <p className="text-[11px] text-[#6B7280] font-medium">Somatório de PIS/COFINS + CBS + IBS — Escala fixa de 0% a 30%</p>
                         </div>
                         <div className="flex-grow min-h-[400px]">
-                            <GeneralChart data={fullSeries} />
+                            <GeneralChart 
+                                data={fullSeries} 
+                                selectedYear={selectedData.year} 
+                                onYearChange={onYearChange}
+                            />
+                        </div>
+                        <div className="mt-4 border-t border-[#F1F5F9] pt-3 text-center">
+                             <p className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">
+                                Legenda fixa: <span className="inline-block w-2 h-2 rounded-full bg-[#E5A100] ml-2"></span> CBS (Federal) | <span className="inline-block w-2 h-2 rounded-full bg-[#FCD34D] ml-2"></span> IBS (Est/Mun) | <span className="inline-block w-2 h-2 rounded-full bg-[#EEF0F3] ml-2 border border-slate-200"></span> PIS/COFINS
+                             </p>
+                             <p className="text-[10px] text-[#9CA3AF] mt-1 font-medium italic">
+                                “Valores empilhados representam a carga tributária total por ano.”
+                             </p>
                         </div>
                     </div>
                 )}
@@ -276,10 +247,7 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                 {activeTab === 'comparison' && (
                     <div className="animate-fade-in h-full flex flex-col">
                          <div className="mb-4">
-                            <h3 className="text-sm font-bold text-[#1E1423] uppercase">Comparativo do Ano</h3>
-                            <p className="text-xs text-[#9CA3AF] mt-1">
-                                Carga do Sistema Antigo vs Novo Modelo em {selectedData.year}.
-                            </p>
+                            <h3 className="text-sm font-bold text-[#1E1423] uppercase">Distribuição da Tributação</h3>
                         </div>
                         <div className="flex-grow min-h-[400px]">
                             <ComparisonChart data={fullSeries} />
@@ -287,77 +255,81 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                     </div>
                 )}
 
+                {/* Aba Detalhe */}
                 {activeTab === 'technical' && (
                     <div className="animate-fade-in flex flex-col h-full">
-                        <div className="mb-4">
+                        <div className="mb-6 border-b border-[#E5E7EB] pb-2">
                             <h3 className="text-sm font-bold text-[#1E1423] uppercase">Dados Nominais ({selectedData.year})</h3>
                         </div>
                         
-                        <div className="overflow-hidden border border-[#E5E7EB] rounded-lg flex-grow">
-                            <table className="w-full text-sm text-left h-full">
-                                <thead className="bg-[#F8F9FB] text-[#4B5563] font-semibold border-b border-[#E5E7EB]">
-                                    <tr>
-                                        <th className="px-4 py-3">Tributo</th>
-                                        <th className="px-4 py-3 text-right">Alíquota</th>
-                                        <th className="px-4 py-3 text-right">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#F8F9FB]">
-                                    <tr className="bg-white">
-                                        <td className="px-4 py-3 font-medium text-[#4B5563]">PIS / COFINS</td>
-                                        <td className="px-4 py-3 text-right font-mono text-[#6B7280]">
-                                            {selectedData.pisCofinsRate.toFixed(2)}%
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${selectedData.pisCofinsStatus === 'active' ? 'bg-[#EEF0F3] text-[#4B5563] border border-[#E5E7EB]' : 'bg-[#F8F9FB] text-[#9CA3AF]'}`}>
-                                                {selectedData.pisCofinsStatus === 'active' ? 'Vigente' : 'Extinto'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr className="bg-white">
-                                        <td className="px-4 py-3 font-medium text-[#4B5563]">ICMS / ISS</td>
-                                        <td className="px-4 py-3 text-right font-mono text-[#6B7280]">
-                                            {selectedData.icmsIssRate.toFixed(2)}%
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                             <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${selectedData.icmsIssTransitionFactor > 0 ? 'bg-[#EEF0F3] text-[#6B7280] border border-[#E5E7EB]' : 'bg-[#F8F9FB] text-[#9CA3AF]'}`}>
-                                                {selectedData.icmsIssTransitionFactor > 0 ? `${selectedData.icmsIssTransitionFactor}% Rem.` : 'Extinto'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr className="bg-[#FFF4D6]">
-                                        <td className="px-4 py-3 font-bold text-[#E5A100]">CBS</td>
-                                        <td className="px-4 py-3 text-right font-mono font-bold text-[#1E1423]">
-                                            {selectedData.cbsRate.toFixed(2)}%
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-white text-[#E5A100] border border-[#E5A100]">
-                                                Novo
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr className="bg-[#FFF4D6]">
-                                        <td className="px-4 py-3 font-bold text-[#F59E0B]">IBS</td>
-                                        <td className="px-4 py-3 text-right font-mono font-bold text-[#1E1423]">
-                                            {selectedData.ibsRate.toFixed(2)}%
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-white text-[#F59E0B] border border-[#FCD34D]">
-                                                Novo
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div className="flex flex-col gap-4">
+                            {/* Card PIS/COFINS */}
+                            <div className={`flex items-center justify-between p-4 bg-white border border-[#E5E7EB] rounded-lg shadow-sm ${selectedData.pisCofinsStatus === 'extinct' ? 'opacity-40' : ''}`}>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-[#9CA3AF] uppercase">Tributo</span>
+                                    <span className="text-sm font-bold text-[#1E1423]">PIS / COFINS</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs font-bold text-[#9CA3AF] uppercase">Tributação</span>
+                                    <span className="text-lg font-mono font-bold text-[#4B5563]">{selectedData.pisCofinsRate.toFixed(2)}%</span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs font-bold text-[#9CA3AF] uppercase">Status</span>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase border ${selectedData.pisCofinsStatus === 'active' ? 'bg-[#EEF0F3] text-[#4B5563] border-[#E5E7EB]' : 'bg-[#F8F9FB] text-[#9CA3AF] border-transparent'}`}>
+                                        {selectedData.pisCofinsStatus === 'active' ? 'Vigente' : 'Extinto'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Card CBS */}
+                            <div className="flex items-center justify-between p-4 bg-[#FFF4D6] border border-[#F6B221] rounded-lg shadow-sm">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-[#E5A100] uppercase">Tributo</span>
+                                    <span className="text-sm font-bold text-[#1E1423]">CBS (Novo Federal)</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs font-bold text-[#E5A100] uppercase">Tributação</span>
+                                    <span className="text-lg font-mono font-bold text-[#1E1423]">{selectedData.cbsRate.toFixed(2)}%</span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs font-bold text-[#E5A100] uppercase">Status</span>
+                                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-white text-[#E5A100] border border-[#E5A100] uppercase">
+                                        Novo
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Card IBS */}
+                            <div className="flex items-center justify-between p-4 bg-[#FFF4D6] border border-[#F6B221] rounded-lg shadow-sm">
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-[#F59E0B] uppercase">Tributo</span>
+                                    <span className="text-sm font-bold text-[#1E1423]">IBS (Novo Est/Mun)</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs font-bold text-[#F59E0B] uppercase">Tributação</span>
+                                    <span className="text-lg font-mono font-bold text-[#1E1423]">{selectedData.ibsRate.toFixed(2)}%</span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs font-bold text-[#F59E0B] uppercase">Status</span>
+                                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-white text-[#F59E0B] border border-[#FCD34D] uppercase">
+                                        Novo
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-auto pt-6 opacity-0 pointer-events-none h-0 overflow-hidden">
+                             <table className="w-full text-xs text-left">
+                                <thead><tr><th>Tributo</th><th className="text-right">Tributação</th></tr></thead>
+                                <tbody><tr><td>Total</td><td className="text-right">{selectedData.totalRate.toFixed(2)}%</td></tr></tbody>
+                             </table>
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
       </div>
 
-      {/* RODAPÉ TABELA (Mantido) */}
       <div className="border border-[#E5E7EB] rounded-lg bg-white overflow-hidden shadow-sm mt-8 animate-fade-in">
           <button 
             onClick={() => setShowFullTable(!showFullTable)}
@@ -366,8 +338,8 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
               <div className="flex items-center gap-3">
                   <div className="bg-[#E5E7EB] p-1.5 rounded text-[#4B5563]"><Table2 size={16} /></div>
                   <div className="text-left">
-                     <p className="text-[#1E1423] font-bold text-sm">Tabela Oficial de Transição (2025-2033)</p>
-                     <p className="text-[#9CA3AF] text-xs">Visão macro completa de todos os tributos</p>
+                     <p className="text-[#1E1423] font-bold text-sm">Tabela Completa de Transição (2026-2033)</p>
+                     <p className="text-[#9CA3AF] text-xs">Visão macro exclusiva CBS / IBS</p>
                   </div>
               </div>
               {showFullTable ? <ChevronUp size={20} className="text-[#9CA3AF]" /> : <ChevronDown size={20} className="text-[#9CA3AF]" />}
@@ -380,30 +352,20 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                         <tr>
                             <th className="px-4 py-3 w-16 text-center">Ano</th>
                             <th className="px-4 py-3 text-right bg-[#F8F9FB] text-[#9CA3AF]">PIS/COFINS</th>
-                            <th className="px-4 py-3 text-right bg-[#F8F9FB] text-[#9CA3AF]">ICMS/ISS</th>
                             <th className="px-4 py-3 text-right bg-[#FFF4D6] text-[#E5A100] border-l border-[#E5E7EB]">CBS (Novo)</th>
                             <th className="px-4 py-3 text-right bg-[#FFF4D6] text-[#F59E0B]">IBS (Novo)</th>
-                            <th className="px-4 py-3 text-right font-bold text-[#1E1423] border-l border-[#E5E7EB] bg-[#F8F9FB]">Carga Efetiva</th>
+                            <th className="px-4 py-3 text-right font-bold text-[#1E1423] border-l border-[#E5E7EB] bg-[#F8F9FB]">Alíquota Total</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F8F9FB]">
                         {fullSeries.map((row) => {
                             const isSelected = row.year === selectedData.year;
-                            const effectiveLoad = row.pisCofinsRate + row.icmsIssRate + row.cbsRate + row.ibsRate;
                             return (
                                 <tr key={row.year} className={`transition-colors ${isSelected ? "bg-[#FFF4D6]" : "hover:bg-[#F8F9FB]"}`}>
                                     <td className="px-4 py-3 font-bold text-center text-[#4B5563]">{row.year}</td>
                                     
                                     <td className="px-4 py-3 text-right font-mono text-[#9CA3AF] bg-[#F8F9FB]">
                                         {row.pisCofinsRate === 0 ? <span className="text-[#E5E7EB]">-</span> : `${row.pisCofinsRate.toFixed(2)}%`}
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-mono text-[#9CA3AF] bg-[#F8F9FB]">
-                                        {row.icmsIssRate === 0 ? <span className="text-[#E5E7EB]">-</span> : 
-                                            <span>
-                                                {row.icmsIssRate.toFixed(2)}%
-                                                <span className="text-[9px] ml-1 text-[#9CA3AF]">({row.icmsIssTransitionFactor}%)</span>
-                                            </span>
-                                        }
                                     </td>
                                     
                                     <td className="px-4 py-3 text-right font-mono text-[#1E1423] bg-[#FFF4D6] bg-opacity-40 border-l border-[#E5E7EB]">
@@ -414,7 +376,7 @@ const Dashboard: React.FC<Props> = ({ selectedData, fullSeries }) => {
                                     </td>
                                     
                                     <td className="px-4 py-3 text-right font-mono font-bold text-[#1E1423] border-l border-[#E5E7EB] bg-[#F8F9FB]">
-                                        {effectiveLoad.toFixed(2)}%
+                                        {row.totalRate.toFixed(2)}%
                                     </td>
                                 </tr>
                             );

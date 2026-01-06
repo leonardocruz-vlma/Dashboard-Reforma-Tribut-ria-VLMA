@@ -7,15 +7,13 @@ interface Props {
 }
 
 const CompositionChart: React.FC<Props> = ({ data }) => {
-  const currentSystemRate = data.pisCofinsRate + data.icmsIssRate;
-
   const pieData = [
-    { name: 'Atual', value: currentSystemRate },
+    { name: 'PIS/COFINS', value: data.pisCofinsRate },
     { name: 'CBS', value: data.cbsRate },
     { name: 'IBS', value: data.ibsRate },
-  ].filter(item => item.value > 0.01);
+  ].filter(item => item.value > 0.001);
 
-  const COLORS = ['#94a3b8', '#38bdf8', '#34d399'];
+  const COLORS = ['#cbd5e1', '#E5A100', '#FCD34D'];
 
   return (
     <div className="h-[100px] w-[100px] flex-shrink-0">

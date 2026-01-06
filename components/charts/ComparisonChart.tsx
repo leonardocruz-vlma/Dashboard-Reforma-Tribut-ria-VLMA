@@ -48,14 +48,6 @@ const ComparisonChart: React.FC<Props> = ({ data }) => {
           />
           <Legend wrapperStyle={{paddingTop: '20px', fontSize: '11px', fontWeight: 600, color: '#4B5563', textTransform: 'uppercase'}} />
           
-          {/* Sistema Antigo (Cinza) */}
-          <Bar 
-            dataKey="ICMS/ISS" 
-            stackId="a" 
-            fill="#E5E7EB" 
-            name="Antigo (ICMS+ISS)" 
-            radius={[0, 0, 0, 0]} 
-          />
           <Bar 
             dataKey="PIS/COFINS" 
             stackId="a" 
@@ -64,8 +56,6 @@ const ComparisonChart: React.FC<Props> = ({ data }) => {
             radius={[0, 0, 0, 0]} 
           />
           
-          {/* Sistema Novo (Yellow VLMA) */}
-          {/* CBS - Amarelo Forte */}
           <Bar 
             dataKey="CBS (Novo)" 
             stackId="a" 
@@ -73,7 +63,6 @@ const ComparisonChart: React.FC<Props> = ({ data }) => {
             name="Novo (CBS)" 
             fillOpacity={0.9}
           />
-          {/* IBS - Amarelo Fraco */}
            <Bar 
             dataKey="IBS (Novo)" 
             stackId="a" 

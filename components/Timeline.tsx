@@ -6,7 +6,7 @@ interface TimelineProps {
 }
 
 const Timeline: React.FC<TimelineProps> = ({ selectedYear, onYearChange }) => {
-    const years = [2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
+    const years = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033];
 
   return (
     <div className="w-full bg-white border-b border-[#E5E7EB]">
