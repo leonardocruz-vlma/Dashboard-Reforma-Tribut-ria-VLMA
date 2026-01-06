@@ -72,8 +72,8 @@ const ScenarioSelector: React.FC<Props> = ({ currentScenario, onSelect }) => {
     <div className="bg-white border-b border-[#E5E7EB] pt-5 pb-3 shadow-sm relative z-10">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* Scenario Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
+        {/* Scenario Grid - Ajustado para 6 colunas para alinhar com as margens */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
             {scenarios.map((scenario) => {
                 const isActive = currentScenario.id === scenario.id;
                 return (
@@ -103,7 +103,7 @@ const ScenarioSelector: React.FC<Props> = ({ currentScenario, onSelect }) => {
             })}
         </div>
         
-        {/* Standardized Horizontal Description Area - Styled according to new professional pattern */}
+        {/* Standardized Horizontal Description Area */}
         <div className="mt-4 mb-3 flex items-start justify-center gap-3">
              <div className="mt-0.5 shrink-0 p-1 bg-[#FFF4D6] rounded-md text-[#F6B221]">
                 <Info size={14} />
